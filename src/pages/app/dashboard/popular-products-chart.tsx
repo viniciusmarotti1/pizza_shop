@@ -1,16 +1,10 @@
-import { BarChart } from 'lucide-react'
+import { BarChart, Loader2 } from 'lucide-react'
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import colors from 'tailwindcss/colors'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
-const data = [
-  { product: 'Calabresa', amount: 56 },
-  { product: 'Frango', amount: 43 },
-  { product: 'Mussarela', amount: 68 },
-  { product: 'Lombo', amount: 20 },
-  { product: 'Marguerita', amount: 45 },
-]
+import { useQuery } from '@tanstack/react-query'
+import { getPopularProducts } from '@/api/get-popular-products'
 
 const COLORS = [
   colors.sky[500],
@@ -21,6 +15,11 @@ const COLORS = [
 ]
 
 export function PopularProductsChart() {
+  const { data: popularProducts } = useQuery({
+    queryFn: getPopularProducts,
+    queryKey: ['metrics', 'popular-products']
+  })
+
   return (
     <Card className="col-span-3">
       <CardHeader className="pb-8">
@@ -30,12 +29,13 @@ export function PopularProductsChart() {
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={240}>
+        {popularProducts ? (
+          <ResponsiveContainer width="100%" height={240}>
           <PieChart style={{ fontSize: 12 }}>
             <Pie
               dataKey="amount"
               nameKey="product"
-              data={data}
+              data={popularProducts}
               cx="50%"
               cy="50%"
               outerRadius={86}
@@ -64,15 +64,15 @@ export function PopularProductsChart() {
                     textAnchor={x > cx ? 'start' : 'end'}
                     dominantBaseline="central"
                   >
-                    {data[index].product.length > 12
-                      ? data[index].product.substring(0, 12).concat('...')
-                      : data[index].product}{' '}
+                    {popularProducts[index].product.length > 12
+                      ? popularProducts[index].product.substring(0, 12).concat('...')
+                      : popularProducts[index].product}{' '}
                     ({value})
                   </text>
                 )
               }}
             >
-              {data.map((_, index) => {
+              {popularProducts.map((_, index) => {
                 return (
                   <Cell
                     key={`cell-${index}`}
@@ -84,6 +84,11 @@ export function PopularProductsChart() {
             </Pie>
           </PieChart>
         </ResponsiveContainer>
+        ) : (
+          <div className='flex h-[240px] w-full items-center justify-center'>
+            <Loader2 className='h-10 w-10 text-muted-foreground animate-spin'/>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
